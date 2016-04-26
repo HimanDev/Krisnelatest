@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html >
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+
+</head>
+<body>
+	<div  ng-app="myapp" ng-controller="MyController">
+		<form>
+			<center>
+				Name: <input ng-model="name" type="text"><br> Mobile
+				No:<input ng-model="number" type="number"><br> Address:
+				<textarea cols="40" ng-model="address" rows="4"></textarea>
+				email id:<input ng-model="email" type="email"><br> <input
+					type="button" ng-click="submitTheForm()" value="Save">
+				<div>{{name}}</div>
+				<div>{{email}}</div>
+
+			</center>
+		</form>
+	</div>
+	<script>
+		angular.module("myapp", []).controller(
+				"MyController",
+				function($scope, $http) {
+					$scope.name = "Jakob Jenkov";
+
+					$scope.submitTheForm = function(item, event) {
+						console.log("--> Submitting form");
+						var dataObject = {
+							name : $scope.name,
+							number : $scope.number,
+							address : $scope.address,
+							email : $scope.email,
+						};
+						console.log(dataObject);
+
+						var responsePromise = $http.post(
+								"/Employee/",
+								dataObject, {});
+						responsePromise.success(function(dataFromServer,
+								status, headers, config) {
+							console.log(dataFromServer);
+						});
+						responsePromise.error(function(data, status, headers,
+								config) {
+							alert("Submitting form failed!");
+						});
+					}
+
+				});
+	</script>
+</body>
+</html>

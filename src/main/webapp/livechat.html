@@ -1,0 +1,212 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>Facebook like chat</title>
+<script src="sockjs.min.js"></script>
+<script src="stomp.min.js"></script>
+<link href="style.css"
+	rel="stylesheet">
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script src="libs/angular/angular.js"></script>
+
+<script src="script.js"></script>
+
+</head>
+
+<body ng-app="myApp" ng-controller="myController">
+
+	<div class="chat_box">
+		<div class="chat_head">Chat Box</div>
+		<div class="chat_body">
+			<div class="user" ng-repeat="x in users">
+				<div ng-click="myFunction(x.objectId)">{{x.name}}</div>
+<!-- 					<div ng-click="x.objectId = ! x.objectId">{{x.name}}</div> -->
+			</div>
+		</div>
+	</div>
+	<input type="hidden" ng-model="receiverId">
+
+	<div ng-repeat="x in users"  class="msg_box msg_box{{x.objectId}}"  >
+		<div class="msg_head">
+			{{x.name}}
+			<div class="close">x</div>
+		</div>
+		<div class="msg_wrap msg_wrap{{x.objectId}}">
+			<div class="msg_body msg_body{{x.objectId}}">
+				<div class="msg_a">This is from A</div>
+				<div class="msg_b">This is from B, and its amazingly kool
+					nah... i know it even i liked it :)</div>
+				<div class="msg_a">Wow, Thats great to hear from you man</div>
+				<div class="msg_push msg_push{{x.objectId}}"></div>
+			</div>
+			<div class="msg_footer">
+				<textarea ng-keypress="onKeyPress($event,x.objectId)" ng-model="textMsg"
+					class="msg_input msg_input{{x.objectId}}" rows="4"></textarea>
+			</div>
+		</div>
+	</div>
+
+<!-- 	<div ng-repeat="x in messages"  class="msg_box msg_box{{x.receiver.objectId}}"  > -->
+<!-- 		<div class="msg_head"> -->
+<!-- 			{{x.receiver.name}} -->
+<!-- 			<div class="close">x</div> -->
+<!-- 		</div> -->
+<!-- 		<div class="msg_wrap msg_wrap{{x.receiver.objectId}}"> -->
+<!-- 			<div class="msg_body msg_body{{x.receiver.objectId}}"> -->
+<!-- 				<div class="msg_a">This is from A</div> -->
+<!-- 				<div class="msg_b">This is from B, and its amazingly kool -->
+<!-- 					nah... i know it even i liked it :)</div> -->
+<!-- 				<div class="msg_a">Wow, Thats great to hear from you man</div> -->
+<!-- 				<div class="msg_push msg_push{{x.objectId}}"></div> -->
+<!-- 			</div> -->
+<!-- 			<div class="msg_footer"> -->
+<!-- 				<textarea ng-keypress="onKeyPress($event,x.objectId)" ng-model="textMsg" -->
+<!-- 					class="msg_input msg_input{{x.objectId}}" rows="4"></textarea> -->
+<!-- 			</div> -->
+<!-- 		</div> -->
+<!-- 	</div> -->
+		
+
+
+
+
+	<script>
+		var stompClient = null;
+		var sessionObj;
+		var appModule = angular.module('myApp', [ 'springChat.services' ]);
+		appModule.run(function($rootScope) {
+			// 			var sessionObj = JSON.parse(localStorage.getItem("session"))
+			// 			var stompClient = null;
+			// 			var socket = new SockJS('/hello');
+			// 			stompClient = Stomp.over(socket);
+			// 			stompClient.connect({}, function(frame) {
+			// 				console.log('Connected: ' + frame);
+			// 				stompClient.subscribe(
+			// 						'/topic/greetings/' + sessionObj.objectId, function(
+			// 								greeting) {
+			// 							showGreeting(JSON.parse(greeting.body).content);
+			// 						});
+			// 			});
+		});
+		appModule.controller('myController', [
+				'$scope',
+				'$http',
+				'ChatSocket',
+				function($scope, $http, chatSocket) {
+					console.log(localStorage.getItem("session"));
+
+					$scope.username = JSON.parse(localStorage
+							.getItem("session"));
+					// 				$http.defaults.headers.common.Authorization = 'Bearer '
+					// 					+ JSON.parse( localStorage.getItem("session")).token;
+
+					var initStompClient = function() {
+						chatSocket.init('/hello');
+						 sessionObj = JSON.parse(localStorage
+								.getItem("session"))
+						chatSocket.connect(function(frame) {
+
+							chatSocket.subscribe("/topic/greetings/"
+									+ sessionObj.objectId, function(message) {
+								console.log(message);
+								getMessage(JSON.parse(message.body).content,JSON.parse(message.body).senderId);
+							});
+						});
+					};
+
+					var getMessage = function(message,senderId) {
+						if (message != '')
+							$('<div class="msg_a">' + message + '</div>')
+									.insertBefore('.msg_push'+senderId);
+						$('.msg_body'+senderId)
+								.scrollTop($('.msg_body'+senderId)[0].scrollHeight);
+					};
+
+					$http.get("/Users").then(function(response) {
+						console.log(response);
+						$scope.users = response.data;
+					});
+					
+					$http.get("/Messages").then(function(response) {
+						console.log(response);
+						$scope.messages = response.data;
+					});
+					
+					$scope.myFunction = function(objectId) {
+						$scope.objectId=!objectId;
+						$scope.receiverId = objectId;
+						$('.msg_wrap'+objectId).show();
+						$('.msg_box'+objectId).show();
+					}
+					$scope.onKeyPress = function($event,recObjectId) {
+						if ($event.keyCode == 13) {
+							var msg = $('.msg_input'+recObjectId).val();
+							$('.msg_input'+recObjectId).val('');
+							if (msg != '')
+								$('<div class="msg_b">' + msg + '</div>')
+										.insertBefore('.msg_push'+recObjectId);
+							$('.msg_body'+recObjectId).scrollTop(
+									$('.msg_body'+recObjectId)[0].scrollHeight);
+							chatSocket.send("/app/hello/" + recObjectId,
+									{}, JSON.stringify({
+										'name' : msg,
+										'senderId':sessionObj.objectId
+									}));
+						}
+					};
+
+					initStompClient();
+				} ]);
+		angular.module('springChat.services', []).factory(
+				'ChatSocket',
+				[
+						'$rootScope',
+						function($rootScope) {
+							var stompClient;
+
+							var wrappedSocket = {
+
+								init : function(url) {
+									stompClient = Stomp.over(new SockJS(url));
+								},
+								connect : function(successCallback,
+										errorCallback) {
+
+									stompClient.connect({}, function(frame) {
+										$rootScope.$apply(function() {
+											successCallback(frame);
+										});
+									}, function(error) {
+										$rootScope.$apply(function() {
+											errorCallback(error);
+										});
+									});
+								},
+								subscribe : function(destination, callback) {
+									stompClient.subscribe(destination,
+											function(message) {
+												$rootScope.$apply(function() {
+													callback(message);
+												});
+											});
+								},
+								send : function(destination, headers, object) {
+									stompClient.send(destination, headers,
+											object);
+								}
+							}
+
+							return wrappedSocket;
+
+						} ]);
+	</script>
+</body>
+</html>

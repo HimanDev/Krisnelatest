@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Direct Messaging</title>
+
+
+<link rel="stylesheet" href="css/reset.css">
+<script src="../libs/angular/angular.js"></script>
+
+
+<link rel="stylesheet" href="css/style.css">
+
+
+
+
+</head>
+
+<body ng-app="myApp" ng-controller="myController">
+
+	<div class="wrapper">
+		<div class="container">
+			<div class="left">
+				<div class="top">
+					<input type="text" /> <a href="javascript:;" class="search"></a>
+				</div>
+				<ul class="people">
+					<li class="person" ng-repeat="x in users" data-chat="{{x.objectId}}" ng-click="!{{x.objectId}}"><img
+						src="http://s13.postimg.org/ih41k9tqr/img1.jpg" alt="" /> <span
+						class="name">{{x.name}}</span> <span class="time">2:09
+							PM</span> <span class="preview">I was wondering...</span></li>
+					
+				</ul>
+			</div>
+			<div class="right">
+				<div class="top">
+					<span>To: <span class="name">Dog Woofson</span></span>
+				</div>
+				<div class="chat"  ng-repeat="x in users" ng-show="{{x.objectId}}" data-chat="{{x.objectId}}">
+					<div class="conversation-start">
+						<span>Today, 6:48 AM</span>
+					</div>
+					<div class="bubble you">Hello,</div>
+					<div class="bubble you">it's me.</div>
+					<div class="bubble you">I was wondering...</div>
+				</div>
+				
+				<div class="write">
+					<a href="javascript:;" class="write-link attach"></a> <input
+						type="text" /> <a href="javascript:;" class="write-link smiley"></a>
+					<a href="javascript:;" class="write-link send"></a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+<!-- 	<script -->
+<!-- 		src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js' type="text/javascript"></script> -->
+
+	<script src="js/index.js"></script>
+
+
+<script>
+		var stompClient = null;
+		var appModule = angular.module('myApp', []);
+// 		appModule.run(function($rootScope) {
+			// 			var sessionObj = JSON.parse(localStorage.getItem("session"))
+			// 			var stompClient = null;
+			// 			var socket = new SockJS('/hello');
+			// 			stompClient = Stomp.over(socket);
+			// 			stompClient.connect({}, function(frame) {
+			// 				console.log('Connected: ' + frame);
+			// 				stompClient.subscribe(
+			// 						'/topic/greetings/' + sessionObj.objectId, function(
+			// 								greeting) {
+			// 							showGreeting(JSON.parse(greeting.body).content);
+			// 						});
+			// 			});
+// 		});
+		appModule.controller('myController', [
+				'$scope',
+				'$http',
+				
+				function($scope, $http) {
+					console.log(localStorage.getItem("session"));
+
+					$scope.username = JSON.parse(localStorage
+							.getItem("session"));
+					// 				$http.defaults.headers.common.Authorization = 'Bearer '
+					// 					+ JSON.parse( localStorage.getItem("session")).token;
+
+// 					var initStompClient = function() {
+// 						chatSocket.init('/hello');
+// 						var sessionObj = JSON.parse(localStorage
+// 								.getItem("session"))
+// 						chatSocket.connect(function(frame) {
+
+// 							chatSocket.subscribe("/topic/greetings/"
+// 									+ sessionObj.objectId, function(message) {
+// 								getMessage(JSON.parse(message.body).content);
+// 							});
+// 						});
+// 					};
+
+// 					var getMessage = function(message) {
+// 						if (message != '')
+// 							$('<div class="msg_a">' + message + '</div>')
+// 									.insertBefore('.msg_push');
+// 						$('.msg_body')
+// 								.scrollTop($('.msg_body')[0].scrollHeight);
+// 					};
+
+					$http.get("/Users").then(function(response) {
+						console.log(response);
+						$scope.users = response.data;
+					});
+// 					$scope.myFunction = function(objectId) {
+// 						alert(objectId);
+// 						$scope.receiverId = objectId;
+// 						$('.msg_wrap').show();
+// 						$('.msg_box').show();
+// 					}
+// 					$scope.onKeyPress = function($event) {
+// 						if ($event.keyCode == 13) {
+// 							var msg = $scope.textMsg;
+// 							$scope.textMsg = "";
+// 							if (msg != '')
+// 								$('<div class="msg_b">' + msg + '</div>')
+// 										.insertBefore('.msg_push');
+// 							$('.msg_body').scrollTop(
+// 									$('.msg_body')[0].scrollHeight);
+// 							chatSocket.send("/app/hello/" + $scope.receiverId,
+// 									{}, JSON.stringify({
+// 										'name' : msg
+// 									}));
+// 						}
+// 					};
+
+// 					initStompClient();
+				} ]);
+// 		angular.module('springChat.services', []).factory(
+// 				'ChatSocket',
+// 				[
+// 						'$rootScope',
+// 						function($rootScope) {
+// 							var stompClient;
+
+// 							var wrappedSocket = {
+
+// 								init : function(url) {
+// 									stompClient = Stomp.over(new SockJS(url));
+// 								},
+// 								connect : function(successCallback,
+// 										errorCallback) {
+
+// 									stompClient.connect({}, function(frame) {
+// 										$rootScope.$apply(function() {
+// 											successCallback(frame);
+// 										});
+// 									}, function(error) {
+// 										$rootScope.$apply(function() {
+// 											errorCallback(error);
+// 										});
+// 									});
+// 								},
+// 								subscribe : function(destination, callback) {
+// 									stompClient.subscribe(destination,
+// 											function(message) {
+// 												$rootScope.$apply(function() {
+// 													callback(message);
+// 												});
+// 											});
+// 								},
+// 								send : function(destination, headers, object) {
+// 									stompClient.send(destination, headers,
+// 											object);
+// 								}
+// 							}
+
+// 							return wrappedSocket;
+
+					//} ]);
+	</script>
+
+</body>
+</html>
